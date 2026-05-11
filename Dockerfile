@@ -6,7 +6,14 @@ COPY package*.json ./
 
 RUN npm ci --omit=dev
 
+COPY prisma ./prisma
+COPY prisma.config.ts ./
 COPY src ./src
+
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+RUN npx prisma generate
 
 EXPOSE 3000
 
