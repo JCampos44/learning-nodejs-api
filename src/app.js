@@ -18,7 +18,7 @@ app.use(
   '/docs',
   apiReference({
     url: '/openapi.json',
-    theme: 'purple',
+    theme: 'solarized',
   }),
 );
 
@@ -66,4 +66,9 @@ async function startServer() {
   });
 }
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = app;
+module.exports.startServer = startServer;
