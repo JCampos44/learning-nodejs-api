@@ -1,5 +1,18 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
+
+function sanitizeUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    deletedAt: user.deletedAt,
+  };
+}
 
 async function register(req, res) {
   const { name, email, password } = req.body;
@@ -35,19 +48,11 @@ async function register(req, res) {
         email,
         password: hashedPassword,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        updatedAt: true,
-        deletedAt: true,
-      },
     });
 
     return res.status(201).json({
       message: 'Usuario registrado correctamente',
-      user,
+      user: sanitizeUser(user),
     });
   } catch (error) {
     if (error.code === 'P2002') {
@@ -64,6 +69,64 @@ async function register(req, res) {
   }
 }
 
+async function login(req, res) {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      message: 'email y password son requeridos',
+    });
+  }
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        email,
+        deletedAt: null,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: 'Credenciales inválidas',
+      });
+    }
+
+    const passwordMatches = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        message: 'Credenciales inválidas',
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        sub: String(user.id),
+        email: user.email,
+        name: user.name,
+      },
+      JWT_SECRET,
+      {
+        expiresIn: JWT_EXPIRES_IN,
+      },
+    );
+
+    return res.status(200).json({
+      message: 'Login exitoso',
+      token,
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error('Error en login:', error);
+
+    return res.status(500).json({
+      message: 'Error interno al iniciar sesión',
+    });
+  }
+}
+
 module.exports = {
+  login,
   register,
 };

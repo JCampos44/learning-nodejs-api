@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { register } = require('../controllers/auth.controller');
+const { login, register } = require('../controllers/auth.controller');
 
 const router = Router();
 
@@ -44,5 +44,42 @@ const router = Router();
  *         description: Internal server error
  */
 router.post('/register', register);
+
+/**
+ * @openapi
+ * /api/login:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Login user
+ *     description: Authenticate user and return JWT token.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: juan@example.com
+ *               password:
+ *                 type: string
+ *                 example: secret123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/login', login);
 
 module.exports = router;
