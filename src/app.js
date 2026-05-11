@@ -5,6 +5,7 @@ const { apiReference } = require('@scalar/express-api-reference');
 require('dotenv').config();
 const pool = require('./config/db');
 const authRoutes = require('./routes/auth.routes');
+const taskRoutes = require('./routes/task.routes');
 const openapiSpec = require('./config/openapi');
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api', authRoutes);
+app.use('/api', taskRoutes);
 app.use(
   '/docs',
   apiReference({
