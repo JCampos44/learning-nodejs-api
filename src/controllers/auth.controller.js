@@ -1,7 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { randomUUID } = require('node:crypto');
 const prisma = require('../config/prisma');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
+const { blacklistToken } = require('../config/token-blacklist');
 
 function sanitizeUser(user) {
   return {
@@ -109,6 +111,7 @@ async function login(req, res) {
       JWT_SECRET,
       {
         expiresIn: JWT_EXPIRES_IN,
+        jwtid: randomUUID(),
       },
     );
 
@@ -126,7 +129,38 @@ async function login(req, res) {
   }
 }
 
+async function logout(req, res) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({
+      message: 'Bearer token requerido',
+    });
+  }
+
+  try {
+    const token = req.token;
+    const { jti, exp } = req.auth || {};
+
+    if (jti && exp) {
+      blacklistToken(jti, exp);
+    }
+
+    return res.status(200).json({
+      message: 'Logout exitoso',
+      tokenRevoked: Boolean(token),
+    });
+  } catch (error) {
+    console.error('Error en logout:', error);
+
+    return res.status(500).json({
+      message: 'Error interno al cerrar sesión',
+    });
+  }
+}
+
 module.exports = {
   login,
+  logout,
   register,
 };

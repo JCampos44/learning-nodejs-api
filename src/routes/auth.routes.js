@@ -1,5 +1,6 @@
 const { Router } = require('express');
-const { login, register } = require('../controllers/auth.controller');
+const authMiddleware = require('../middlewares/auth.middleware');
+const { login, logout, register } = require('../controllers/auth.controller');
 
 const router = Router();
 
@@ -81,5 +82,46 @@ router.post('/register', register);
  *         description: Internal server error
  */
 router.post('/login', login);
+
+/**
+ * @openapi
+ * /api/logout:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Logout user
+ *     description: Revoke current JWT token.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/logout', authMiddleware, logout);
+
+/**
+ * @openapi
+ * /api/me:
+ *   get:
+ *     tags:
+ *       - Auth
+ *     summary: Current user
+ *     description: Return authenticated user info.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/me', authMiddleware, (req, res) => {
+  res.json({
+    message: 'Usuario autenticado',
+    user: req.user,
+  });
+});
 
 module.exports = router;

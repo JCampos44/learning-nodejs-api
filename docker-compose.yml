@@ -34,6 +34,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    command: npm run dev
     environment:
       PORT: 3000
       DB_HOST: mysql
@@ -46,3 +47,6 @@ services:
       DATABASE_URL: "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${DB_NAME}"
     ports:
       - '3000:3000'
+    volumes:
+      - .:/app
+      - /app/node_modules
